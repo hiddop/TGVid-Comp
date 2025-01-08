@@ -185,9 +185,19 @@ async def CompressVideo(bot, query, ffmpegcode, c_thumb):
     UID = query.from_user.id
     ms = await query.message.edit('Pʟᴇᴀsᴇ Wᴀɪᴛ...\n\n**Fᴇᴛᴄʜɪɴɢ Qᴜᴇᴜᴇ 👥**')
     
+    # Check for ffmpeg/{UID} and encode/{UID} existence with retries
+    max_retries = 50
+    retry_count = 0
+    while retry_count < max_retries:
+        if os.path.isdir(f'ffmpeg/{UID}') or os.path.isdir(f'encode/{UID}'):
+            await ms.edit(f"⚠️ **Compression already in progress for user {UID}.**\n\n🔄 Retrying in 30 seconds...")
+            await asyncio.sleep(30)
+            retry_count += 1
+        else:
+            break
 
-    if os.path.isdir(f'ffmpeg/{UID}') and os.path.isdir(f'encode/{UID}'):
-        return await ms.edit("**⚠️ Yᴏᴜ ᴄᴀɴ ᴄᴏᴍᴘʀᴇss ᴏɴʟʏ ᴏɴᴇ ғɪʟᴇ ᴀᴛ ᴀ ᴛɪᴍᴇ\n\nAs ᴛʜɪs ʜᴇʟᴘs ʀᴇᴅᴜᴄᴇ sᴇʀᴠᴇʀ ʟᴏᴀᴅ.**")
+    if retry_count == max_retries:
+        return await ms.edit("⚠️ **Failed to start compression as directories are still in use after multiple retries.**")
 
     try:
         media = query.message.reply_to_message
